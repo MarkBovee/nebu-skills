@@ -14,9 +14,10 @@ This is the persistent successor of the `askkit-1` runtime demo
 - **Browser face** (`client.js`) — lazy-CJS factory bundle registered in slot
   `conversation.composer.dock` (`id: ask-kit-status`, order 50). Reads the
   `askKit` session projection reactively (`sessions.binding(id).session.
-  projections.faceOf("askKit")`), no polling RPC. The bundle derives its own
-  registration id from its script URL (`/plugins/<id>/client.js`, id = the bare
-  package name), which must match the node face's exported `name`.
+  projections.faceOf("askKit")`), no polling RPC. The bundle uses the fixed
+  registration id `ask-kit-panel`, which must match the package name and node
+  face's exported `name`; client-modules bundles do not expose a stable
+  `currentScript` URL.
 - **Node face** (`index.mjs`) — inert Cordis plugin so the package loads
   cleanly as a node-plugin row too (dual-face requirement).
 

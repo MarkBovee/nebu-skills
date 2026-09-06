@@ -1,16 +1,7 @@
 window.__ModuleLoader__.load({
-	id: (function () {
-		/** Derive this bundle's registration id from its own script URL. The
-		* boot-graph row id equals the roster entry's `name` — the bare package
-		* name (`ask-kit-panel`), which the host serves at /plugins/<id>/client.js
-		* — so the id is recovered here instead of being baked into the repo copy. */
-		try {
-			var src = (typeof document !== "undefined" && document.currentScript && document.currentScript.src) || "";
-			var m = src.match(/\/plugins\/(.+?)\/client\.js(?:\?.*)?$/);
-			if (m && m[1]) return decodeURIComponent(m[1]);
-		} catch { /* fall through to the loud failure below */ }
-		throw new Error("ask-kit-panel: cannot derive bundle id from script URL — served outside the /plugins/<id>/client.js route");
-	})(),
+	// client-modules bundles do not execute with a stable currentScript URL.
+	// Keep this equal to package.json.name and the managed roster row id.
+	id: "ask-kit-panel",
 	factory: (require) => {
 		var module = { exports: {} };
 		var exports = module.exports;

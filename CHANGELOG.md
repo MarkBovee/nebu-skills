@@ -6,6 +6,12 @@ Format follows Keep a Changelog. Stable releases use SemVer tags in `vX.Y.Z` for
 
 ## Unreleased
 
+## [1.6.4] - Unreleased
+
+### Fixed
+
+- **ask-kit-panel client loader registration.** The browser bundle now uses its stable roster id instead of `document.currentScript`; dsh `client-modules` bundles do not provide a reliable script URL, which caused the panel loader to register under no matching id.
+
 ## [1.6.3] - Unreleased
 
 ### Fixed
