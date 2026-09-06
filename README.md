@@ -8,9 +8,9 @@
 </p>
 
 <p align="center">
-  <img alt="OpenCode supported" src="https://img.shields.io/badge/OpenCode-first-00E6FF?style=for-the-badge&labelColor=10131A" />
-  <img alt="GitHub Copilot supported" src="https://img.shields.io/badge/GitHub_Copilot-exported-FF4FD8?style=for-the-badge&labelColor=10131A" />
-  <img alt="Claude Code supported" src="https://img.shields.io/badge/Claude_Code-exported-FFD166?style=for-the-badge&labelColor=10131A" />
+  <img alt="OpenCode supported" src="https://img.shields.io/badge/OpenCode-supported-00E6FF?style=for-the-badge&labelColor=10131A" />
+  <img alt="GitHub Copilot supported" src="https://img.shields.io/badge/GitHub_Copilot-supported-FF4FD8?style=for-the-badge&labelColor=10131A" />
+  <img alt="Claude Code supported" src="https://img.shields.io/badge/Claude_Code-supported-FFD166?style=for-the-badge&labelColor=10131A" />
   <img alt="dsh supported" src="https://img.shields.io/badge/dsh-supported-4C9AFF?style=for-the-badge&labelColor=10131A" />
 </p>
 
