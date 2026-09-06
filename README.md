@@ -4,14 +4,14 @@
 
 <p align="center">
   <strong>ASK — Agent Skills Kit.</strong><br />
-  Workflow skills and routing support for coding agents. A curated skill pack for OpenCode, GitHub Copilot, and Claude Code — purpose-built workflow guidance without the boilerplate.
+  Portable workflow skills and routing support for coding agents. One canonical skill system for OpenCode, GitHub Copilot, Claude Code, and DeepSeek Harness (dsh).
 </p>
 
 <p align="center">
   <img alt="OpenCode first" src="https://img.shields.io/badge/OpenCode-first-00E6FF?style=for-the-badge&labelColor=10131A" />
   <img alt="GitHub Copilot export" src="https://img.shields.io/badge/GitHub_Copilot-exported-FF4FD8?style=for-the-badge&labelColor=10131A" />
   <img alt="Claude Code export" src="https://img.shields.io/badge/Claude_Code-exported-FFD166?style=for-the-badge&labelColor=10131A" />
-  <img alt="Develop default" src="https://img.shields.io/badge/Develop-default-7C5CFF?style=for-the-badge&labelColor=10131A" />
+  <img alt="dsh support" src="https://img.shields.io/badge/dsh-supported-4C9AFF?style=for-the-badge&labelColor=10131A" />
 </p>
 
 <p align="center">
@@ -23,13 +23,14 @@
 <p align="center">
   <code>ASK</code>
   <code>14 skills</code>
-  <code>1 router plugin</code>
-  <code>3 platforms</code>
+  <code>1 router</code>
+  <code>4 agent platforms</code>
   <code>review + verification</code>
 </p>
 
 <p align="center">
   <a href="#install">Install</a> •
+  <a href="#architecture">Architecture</a> •
   <a href="#skills">Skills</a> •
   <a href="#workflow-model">Workflow</a> •
   <a href="#router">Router</a> •
@@ -44,23 +45,83 @@
 
 **ASK** (Agent Skills Kit) keeps workflow skills and routing support in one canonical, platform-portable repository.
 
-| Signal | What it means |
-| --- | --- |
-| One canonical source | Skills live once under `skills/` and export into native GitHub Copilot and Claude Code formats. |
-| OpenCode is reference | Router behavior and plugin support are designed around OpenCode first. |
-| Develop by default | Normal software work starts with steady iterative progress, not heavyweight process. |
-| Hints only | Router suggests skills. It does not rewrite commands, auto-run tools, or hijack sessions. |
+| Signal               | What it means                                                                                         |
+| -------------------- | ----------------------------------------------------------------------------------------------------- |
+| One canonical source | Skills live once under `skills/` and export into native platform formats.                             |
+| Multi-platform       | The same skill system works across OpenCode, GitHub Copilot, Claude Code, and dsh.                    |
+| Smart routing        | The router helps the agent select the right skill for the current task without taking over execution. |
+| Develop by default   | Normal software work starts with steady iterative progress, not heavyweight process.                  |
+| Hints only           | Router suggests skills. It does not rewrite commands, auto-run tools, or hijack sessions.             |
 
 ## Design Goals
 
-- Sharpen workflow routing without building a monolithic prompt constitution.
-- Treat implementation, debugging, review, verification, and wrap-up as explicit, intentional stages.
-- Ship portable workflow guidance from a single repository to three agent platforms.
-- Require proof that matches the claim — not ritual for its own sake.
+* Sharpen workflow routing without building a monolithic prompt constitution.
+* Treat implementation, debugging, review, verification, and wrap-up as explicit, intentional stages.
+* Ship portable workflow guidance from a single repository to multiple agent platforms.
+* Require proof that matches the claim — not ritual for its own sake.
 
 Project changes are tracked in [CHANGELOG.md](./CHANGELOG.md).
 
 Stable installs resolve the latest `vX.Y.Z` tag before copying managed assets. The bootstrap entrypoints are fetched from `main`, but the managed checkout prefers the newest stable tag and only falls back to the current checkout when no stable tag exists yet.
+
+---
+
+## Architecture
+
+ASK separates **where the agent runs** from **what the agent needs to do**.
+
+```mermaid
+flowchart LR
+    subgraph Agents[Agent platforms]
+        OC[OpenCode]
+        CP[GitHub Copilot]
+        CC[Claude Code]
+        DSH[dsh]
+    end
+
+    Agents --> RQ[User request]
+    RQ --> RT[ASK Router]
+
+    RT --> PL[Plan]
+    RT --> SP[Spec]
+    RT --> DE[Develop]
+    RT --> VA[Validate]
+    RT --> IM[Improve]
+    RT --> PR[Product]
+    RT --> WR[Write]
+    RT --> OP[Operate]
+
+    PL --> SK[Canonical skills]
+    SP --> SK
+    DE --> SK
+    VA --> SK
+    IM --> SK
+    PR --> SK
+    WR --> SK
+    OP --> SK
+
+    SK --> TOOLS[Agent tools / workspace]
+```
+
+The platform layer provides the agent runtime. The request enters the shared router, the agent selects the appropriate workflow skill, and the skill guides execution against the available tools and workspace.
+
+The routing groups map to the current skill pack:
+
+| Group          | Skills                           | Purpose                                                                          |
+| -------------- | -------------------------------- | -------------------------------------------------------------------------------- |
+| **Plan**       | `intake`                         | Explore the problem, clarify scope, and shape multi-phase work before execution. |
+| **Spec**       | `spec`                           | Turn requirements into a validated, traceable specification.                     |
+| **Develop**    | `develop`, `debugging`           | Implement normal software changes and investigate failures.                      |
+| **Validate**   | `code-review`, `verification`    | Review changes and prove completion claims.                                      |
+| **Improve**    | `improve`, `session-review`      | Audit, refactor, and improve the workflow itself.                                |
+| **Product**    | `ui-ux`, `design-review`         | Design interfaces and filter them before shipping.                               |
+| **Write**      | `text-writing`                   | Produce human-first written output.                                              |
+| **Operate**    | `gh-inbox`                       | Triage and maintain the repository's GitHub workflow.                            |
+| **Coordinate** | `agent-workflows`, `write-skill` | Coordinate agents and maintain or extend the skill system.                       |
+
+The important boundary is:
+
+**same skills, any agent; different skills, different tasks.**
 
 ---
 
@@ -74,20 +135,22 @@ The managed installer now does one thing: install all shared skills into `~/.age
 
 If you want non-default locations, set environment variables before running the installer:
 
-- `AGENTS_DIR`
-- `COPILOT_DIR`
-- `OPENCODE_DIR`
-- `CLAUDE_DIR`
-- `DSH_HOME`
+* `AGENTS_DIR`
+* `COPILOT_DIR`
+* `OPENCODE_DIR`
+* `CLAUDE_DIR`
+* `DSH_HOME`
 
 ### Bootstrap
 
 **Linux / macOS — Bash:**
+
 ```bash
 curl -fsSL https://raw.githubusercontent.com/MarkBovee/agent-skills-kit/main/scripts/bootstrap.sh | bash
 ```
 
 **Windows — PowerShell:**
+
 ```powershell
 irm https://raw.githubusercontent.com/MarkBovee/agent-skills-kit/main/scripts/bootstrap.ps1 | iex
 ```
@@ -98,6 +161,7 @@ irm https://raw.githubusercontent.com/MarkBovee/agent-skills-kit/main/scripts/bo
 Local clone install:
 
 **Linux / macOS — Bash:**
+
 ```bash
 gh repo clone MarkBovee/agent-skills-kit
 cd agent-skills-kit
@@ -105,6 +169,7 @@ bash ./scripts/install.sh
 ```
 
 **Windows — PowerShell:**
+
 ```powershell
 pwsh -NoLogo -NoProfile -File .\scripts\install.ps1
 ```
@@ -113,18 +178,16 @@ pwsh -NoLogo -NoProfile -File .\scripts\install.ps1
 
 Manual install copies:
 
-- all folders under `~/.agents/skills/`
-- `core/router-core.js`
-- `plugins/agent-skills-router.mjs`
-
-
+* all folders under `~/.agents/skills/`
+* `core/router-core.js`
+* `plugins/agent-skills-router.mjs`
 
 Common OpenCode config locations:
 
-| Platform | Path |
-| --- | --- |
-| macOS / Linux / WSL | `~/.config/opencode/` |
-| Windows PowerShell | `$HOME\.config\opencode\` |
+| Platform            | Path                      |
+| ------------------- | ------------------------- |
+| macOS / Linux / WSL | `~/.config/opencode/`     |
+| Windows PowerShell  | `$HOME\.config\opencode\` |
 
 Custom roots use the unified installer via environment variables instead of platform-specific positional arguments.
 
@@ -132,8 +195,8 @@ Custom roots use the unified installer via environment variables instead of plat
 
 Installed paths:
 
-- `~/.agents/skills/`
-- `~/.copilot/instructions/`
+* `~/.agents/skills/`
+* `~/.copilot/instructions/`
 
 VS Code / Copilot now consumes the shared skill root from `~/.agents/skills/`. The Copilot-specific part that remains native is `~/.copilot/instructions/`.
 
@@ -153,8 +216,8 @@ Native Agent Skills perform the automatic relevance-based loading. The plugin ma
 
 Installed paths:
 
-- `~/.agents/skills/`
-- `~/.claude/rules/`
+* `~/.agents/skills/`
+* `~/.claude/rules/`
 
 If `~/.claude/` exists, the installer writes Claude rules under `~/.claude/rules/` and links `~/.claude/skills` back to `~/.agents/skills`.
 
@@ -166,10 +229,10 @@ dsh (DeepSeek Harness) is a Cordis-based "everything is a plugin" agent harness.
 
 Installed paths (when dsh is present — a reachable `dsh` binary or an existing dsh home):
 
-- `~/.dsh/skills/` — dsh-optimized skill variant (frontmatter `name` + trigger-augmented `description` capped at the dsh catalog limit, plus `whenToUse`)
-- `~/.dsh/AGENTS.md` — always-on routing guidance, appended once behind a `<!-- agent-skills-kit:dsh -->` marker (never rewrites existing content)
-- `~/.dsh/.agent-presets/ask-kit/` — optional agent preset: a one-time copy of the deployed `standard` preset plus this kit's managed router row (`plugins/ask-kit-router.mjs`, `vendor/router-core.js`)
-- `~/.dsh/.agent-skills-kit-dsh-install.txt` — install metadata
+* `~/.dsh/skills/` — dsh-optimized skill variant (frontmatter `name` + trigger-augmented `description` capped at the dsh catalog limit, plus `whenToUse`)
+* `~/.dsh/AGENTS.md` — always-on routing guidance, appended once behind a `<!-- agent-skills-kit:dsh -->` marker (never rewrites existing content)
+* `~/.dsh/.agent-presets/ask-kit/` — optional agent preset: a one-time copy of the deployed `standard` preset plus this kit's managed router row (`plugins/ask-kit-router.mjs`, `vendor/router-core.js`)
+* `~/.dsh/.agent-skills-kit-dsh-install.txt` — install metadata
 
 #### dsh router preset (optional)
 
@@ -185,14 +248,14 @@ dsh skill roots and ranks (preview, see API exposure below): `<project>/.dsh/ski
 
 Everything dsh-related is `0.1.0-rc.x` developer preview and can change without notice. The kit's dsh support depends on:
 
-| Surface | What the kit relies on | Break risk |
-| --- | --- | --- |
-| Skill discovery roots & ranks | `~/.dsh/skills` (400) and `~/.agents/skills` (500) discovery, project `.dsh/skills` (100) | Path or rank changes silently change which variant loads |
-| Skill frontmatter contract | `name` (kebab-case) + `description`; optional `whenToUse`; unknown fields (e.g. `triggers`) tolerated | A stricter validator could reject unknown fields |
-| Catalog rendering | `name` + `description` only, `catalogDescriptionMaxLength` default 500 | Description truncation; if `whenToUse` starts rendering, descriptions may read duplicated |
-| `agent-instructions` | `~/.dsh/AGENTS.md` user-global candidate, project `AGENTS.md`/`CLAUDE.md` candidates, per-directory content dedup, `maxBytes` budget | Candidate-name changes or dedup changes alter which guidance loads |
-| Skill registry (`ctx.skills`) | `registerProvider`/`snapshot`/`list`/`get`, duplicate-name shadowing across layers | API churn in the registry contract |
-| MCP bridge (`dsh-mcp-client`) | Not used by the kit (tools only; skills are not MCP) | n/a |
+| Surface                       | What the kit relies on                                                                                                               | Break risk                                                                                |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| Skill discovery roots & ranks | `~/.dsh/skills` (400) and `~/.agents/skills` (500) discovery, project `.dsh/skills` (100)                                            | Path or rank changes silently change which variant loads                                  |
+| Skill frontmatter contract    | `name` (kebab-case) + `description`; optional `whenToUse`; unknown fields (e.g. `triggers`) tolerated                                | A stricter validator could reject unknown fields                                          |
+| Catalog rendering             | `name` + `description` only, `catalogDescriptionMaxLength` default 500                                                               | Description truncation; if `whenToUse` starts rendering, descriptions may read duplicated |
+| `agent-instructions`          | `~/.dsh/AGENTS.md` user-global candidate, project `AGENTS.md`/`CLAUDE.md` candidates, per-directory content dedup, `maxBytes` budget | Candidate-name changes or dedup changes alter which guidance loads                        |
+| Skill registry (`ctx.skills`) | `registerProvider`/`snapshot`/`list`/`get`, duplicate-name shadowing across layers                                                   | API churn in the registry contract                                                        |
+| MCP bridge (`dsh-mcp-client`) | Not used by the kit (tools only; skills are not MCP)                                                                                 | n/a                                                                                       |
 
 After a dsh update, the cheap check is a fresh session: the `<available_skills>` catalog should list all fourteen skills and `skill(name: '...')` should load a body; typing `/` in the composer should offer the kit's slash commands when the ask-kit preset is selected.
 
@@ -200,10 +263,10 @@ After a dsh update, the cheap check is a fresh session: the `<available_skills>`
 
 Skills are now centralized in `~/.agents/skills/`. The remaining editor-specific surfaces are:
 
-- VS Code / Copilot still uses `~/.copilot/instructions/` for user instructions
-- Claude Code still uses `~/.claude/CLAUDE.md` and `~/.claude/rules/` for instructions and rules
-- OpenCode still uses its own config/plugin surfaces under `~/.config/opencode/`
-- dsh uses `~/.dsh/skills/` for its optimized skill variant and `~/.dsh/AGENTS.md` for routing guidance
+* VS Code / Copilot still uses `~/.copilot/instructions/` for user instructions
+* Claude Code still uses `~/.claude/CLAUDE.md` and `~/.claude/rules/` for instructions and rules
+* OpenCode still uses its own config/plugin surfaces under `~/.config/opencode/`
+* dsh uses `~/.dsh/skills/` for its optimized skill variant and `~/.dsh/AGENTS.md` for routing guidance
 
 The unified installer removes old managed skill copies from editor-specific skill directories so `~/.agents/skills/` becomes the single managed source of truth.
 
@@ -217,46 +280,46 @@ Skills use short display names (e.g. `debugging`, `develop`) for easy reference.
 
 ### By Stage
 
-| Stage | Skills | Purpose |
-| --- | --- | --- |
-| Start | `spec`, `intake` | formalize requirements into a validated traceable spec; clarify fuzzy work before it gets expensive |
-| Execute | `develop`, `debugging` | move code forward with small coherent loops |
-| Validate | `code-review`, `verification` | review the diff and prove the claim (includes workspace wrap-up) |
-| Improve | `improve`, `session-review` | audit, refactor, session review, skill improvement |
-| Coordinate | `agent-workflows`, `write-skill` | route work, finish cleanly, keep the skill system healthy |
-| Product | `ui-ux`, `design-review` | push interface work beyond bland default SaaS output, then filter it for AI-default slop before shipping |
-| Write | `text-writing` | produce human-sounding text without detectable AI writing patterns |
-| Operate | `gh-inbox` | triage the current repository's GitHub issues and discussions, reply when clear, persist inbox state |
+| Stage      | Skills                           | Purpose                                                                                                  |
+| ---------- | -------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Start      | `spec`, `intake`                 | formalize requirements into a validated traceable spec; clarify fuzzy work before it gets expensive      |
+| Execute    | `develop`, `debugging`           | move code forward with small coherent loops                                                              |
+| Validate   | `code-review`, `verification`    | review the diff and prove the claim (includes workspace wrap-up)                                         |
+| Improve    | `improve`, `session-review`      | audit, refactor, session review, skill improvement                                                       |
+| Coordinate | `agent-workflows`, `write-skill` | route work, finish cleanly, keep the skill system healthy                                                |
+| Product    | `ui-ux`, `design-review`         | push interface work beyond bland default SaaS output, then filter it for AI-default slop before shipping |
+| Write      | `text-writing`                   | produce human-sounding text without detectable AI writing patterns                                       |
+| Operate    | `gh-inbox`                       | triage the current repository's GitHub issues and discussions, reply when clear, persist inbox state     |
 
 ### Full Roster
 
-| Skill | Tier | Purpose |
-| --- | --- | --- |
-| `spec` | standard | Requirements specification + validation gates (Capture → Structure → Validate → Transfer) |
-| `develop` | standard | Default baseline: small, safe iterative software work (includes implementation mode selection) |
-| `intake` | standard | Pre-execution: design exploration, scope clarification, and multi-phase planning |
-| `debugging` | standard | Root-cause investigation |
-| `code-review` | standard | Engineering review passes |
-| `verification` | standard | Validation + workspace wrap-up before claiming completion |
-| `improve` | heavy | Audit-driven improvement + focused refactoring |
-| `session-review` | light | Session self-review + GitHub issue filing |
-| `ui-ux` | heavy | UI and UX implementation support |
-| `design-review` | standard | Anti-default filter: reviews design, UI, or copy for AI-generated slop before shipping |
-| `text-writing` | standard | Human-first writing: avoids AI-detected vocabulary, structure, punctuation, and formatting patterns |
-| `agent-workflows` | light | Multi-agent coordination + release chores |
-| `write-skill` | standard | Skill authoring + workflow improvement tracking |
-| `gh-inbox` | standard | GitHub issue/discussion triage: fetch, diff against stored state, reply when clear, persist |
+| Skill             | Tier     | Purpose                                                                                             |
+| ----------------- | -------- | --------------------------------------------------------------------------------------------------- |
+| `spec`            | standard | Requirements specification + validation gates (Capture → Structure → Validate → Transfer)           |
+| `develop`         | standard | Default baseline: small, safe iterative software work (includes implementation mode selection)      |
+| `intake`          | standard | Pre-execution: design exploration, scope clarification, and multi-phase planning                    |
+| `debugging`       | standard | Root-cause investigation                                                                            |
+| `code-review`     | standard | Engineering review passes                                                                           |
+| `verification`    | standard | Validation + workspace wrap-up before claiming completion                                           |
+| `improve`         | heavy    | Audit-driven improvement + focused refactoring                                                      |
+| `session-review`  | light    | Session self-review + GitHub issue filing                                                           |
+| `ui-ux`           | heavy    | UI and UX implementation support                                                                    |
+| `design-review`   | standard | Anti-default filter: reviews design, UI, or copy for AI-generated slop before shipping              |
+| `text-writing`    | standard | Human-first writing: avoids AI-detected vocabulary, structure, punctuation, and formatting patterns |
+| `agent-workflows` | light    | Multi-agent coordination + release chores                                                           |
+| `write-skill`     | standard | Skill authoring + workflow improvement tracking                                                     |
+| `gh-inbox`        | standard | GitHub issue/discussion triage: fetch, diff against stored state, reply when clear, persist         |
 
 ## Commands
 
 Each skill also ships as a slash command. A command loads its skill and applies the workflow — no duplicated instructions, always the current skill body.
 
-| Platform | Mechanism | Location |
-| --- | --- | --- |
-| OpenCode | `.md` command files | `~/.config/opencode/commands/` (global) |
-| GitHub Copilot / VS Code | prompt files | `.github/prompts/*.prompt.md` + `~/.copilot/prompts/` |
-| Claude Code | skills are commands (2026) | no separate file — `skill` → `/name` |
-| DeepSeek Harness (dsh) | registered by the ask-kit preset row | no files — `ctx.commands.register()` at runtime |
+| Platform                 | Mechanism                            | Location                                              |
+| ------------------------ | ------------------------------------ | ----------------------------------------------------- |
+| OpenCode                 | `.md` command files                  | `~/.config/opencode/commands/` (global)               |
+| GitHub Copilot / VS Code | prompt files                         | `.github/prompts/*.prompt.md` + `~/.copilot/prompts/` |
+| Claude Code              | skills are commands (2026)           | no separate file — `skill` → `/name`                  |
+| DeepSeek Harness (dsh)   | registered by the ask-kit preset row | no files — `ctx.commands.register()` at runtime       |
 
 Commands are authored once under `commands/` and exported by `export-platform-skills.js` into `.opencode/commands/` (OpenCode) and `.github/prompts/*.prompt.md` (Copilot/VS Code). Claude Code gets its command surface for free because its skills already act as slash commands. dsh has no file-based command discovery; its picker entries are registered programmatically by the ask-kit router preset (one `ctx.commands.register()` per skill; the handler steers the load-the-skill prompt pattern), so no command files ship for it.
 
@@ -314,15 +377,16 @@ flowchart TD
     style T fill:#1a1a2e,stroke:#8b5cf6,color:#fff
 ```
 
-| Stage | Skills | Color |
-| --- | --- | --- |
-| **Start** | `spec`, `intake` | `#7C5CFF` purple |
-| **Execute** | `debugging`, `develop` | `#e94560` red |
-| **Validate** | `code-review`, `verification` | `#2ecc71` green |
-| **Improve** | `improve`, `session-review` | `#f39c12` orange |
-| **Coordinate** | `agent-workflows`, `write-skill` | `#1abc9c` teal |
-| **Product** | `ui-ux` | `#e91e8c` pink |
-| **Write** | `text-writing` | `#8b5cf6` violet |
+| Stage          | Skills                           | Color            |
+| -------------- | -------------------------------- | ---------------- |
+| **Start**      | `spec`, `intake`                 | `#7C5CFF` purple |
+| **Execute**    | `debugging`, `develop`           | `#e94560` red    |
+| **Validate**   | `code-review`, `verification`    | `#2ecc71` green  |
+| **Improve**    | `improve`, `session-review`      | `#f39c12` orange |
+| **Coordinate** | `agent-workflows`, `write-skill` | `#1abc9c` teal   |
+| **Product**    | `ui-ux`, `design-review`         | `#e91e8c` pink   |
+| **Write**      | `text-writing`                   | `#8b5cf6` violet |
+| **Operate**    | `gh-inbox`                       | `#4c9aff` blue   |
 
 Session state tracks code edits, tool usage, and skill-load events. The router nudges when code was edited without review, when a UI was produced (load `design-review`), or when many tools ran without loading any skill — always hint, never force.
 
@@ -330,12 +394,12 @@ Session state tracks code edits, tool usage, and skill-load events. The router n
 
 Two optional frontmatter fields let a skill declare how expensive its default flow is, so hosts that support cheaper subagents or models can route mechanical work to them instead of the primary agent:
 
-| `execution_tier` | Suggested `agentTier` | When to use | Example |
-| --- | --- | --- | --- |
-| `light` | `mini` | bounded, mechanical, single-pass work | `session-review` |
-| `standard` (default) | `default` | normal judgment-heavy work | `develop`, `spec`, `intake`, `code-review`, `debugging`, `verification`, `write-skill`, `text-writing` |
-| `heavy` | `high` | broad or multi-part work, e.g. a full codebase audit or complex UI design | `improve`, `ui-ux` |
-| `deep` | `xhigh` | analysis-heavy or architectural work | — |
+| `execution_tier`     | Suggested `agentTier` | When to use                                                               | Example                                                                                                |
+| -------------------- | --------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `light`              | `mini`                | bounded, mechanical, single-pass work                                     | `session-review`                                                                                       |
+| `standard` (default) | `default`             | normal judgment-heavy work                                                | `develop`, `spec`, `intake`, `code-review`, `debugging`, `verification`, `write-skill`, `text-writing` |
+| `heavy`              | `high`                | broad or multi-part work, e.g. a full codebase audit or complex UI design | `improve`, `ui-ux`                                                                                     |
+| `deep`               | `xhigh`               | analysis-heavy or architectural work                                      | —                                                                                                      |
 
 `delegation_default` (`auto` / `prefer-subagent` / `owner-only`) hints whether the work should default to a subagent when the host supports one. Both fields are read by `buildExecutionProfile` in `core/router-core.js`, which also upgrades the tier when the prompt itself signals light or heavy/deep work (e.g. "version bump" vs. "cross-repo migration"), regardless of which skill matched.
 
@@ -343,18 +407,17 @@ The result is injected as a single line, e.g. `Suggested execution profile: task
 
 Hard boundaries:
 
-- no command rewriting
-- no automatic tool execution
-- no session takeover
-- no hidden automation
+* no command rewriting
+* no automatic tool execution
+* no session takeover
+* no hidden automation
 
 ### Provider peak-window warnings
 
-The router detects the active model provider (via `chat.params`) and, once per session,
-surfaces a one-line warning when the provider's peak window is active:
+The router detects the active model provider (via `chat.params`) and, once per session, surfaces a one-line warning when the provider's peak window is active:
 
-- **Anthropic / Claude** — weekdays 13:00–19:00 UTC, session limit drains faster.
-- **DeepSeek** — 01:00–04:00 or 06:00–10:00 UTC, usage costs 2x.
+* **Anthropic / Claude** — weekdays 13:00–19:00 UTC, session limit drains faster.
+* **DeepSeek** — 01:00–04:00 or 06:00–10:00 UTC, usage costs 2x.
 
 These are informational hints only — they never block work or force delegation.
 
@@ -362,14 +425,14 @@ These are informational hints only — they never block work or force delegation
 
 ## Platform Matrix
 
-| Platform | Ships | Generated assets or install target |
-| --- | --- | --- |
-| OpenCode | router plugin, routing support, bootstrap/install/update tooling | installs managed skills plus `core/router-core.js` and `plugins/agent-skills-router.mjs` |
-| GitHub Copilot | VS Code Agent Plugin, native skills, lifecycle hooks, generated skills, reusable instructions | `.claude-plugin/plugin.json`, `skills/`, `hooks/hooks.json`, `.github/skills/`, `.github/copilot-instructions.md`, `~/.agents/skills/`, `~/.copilot/instructions/` |
-| Claude Code | generated skills, reusable rules, bootstrap/install/update tooling | `.claude/skills/`, `CLAUDE.md`, `~/.claude/skills/`, `~/.claude/rules/` |
-| DeepSeek Harness (dsh) | generated skills, routing guidance, optional router agent preset, preview API exposure docs | `.dsh/skills/`, `~/.dsh/skills/`, `~/.dsh/AGENTS.md`, `~/.dsh/.agent-presets/ask-kit/` |
+| Platform               | Ships                                                                                         | Generated assets or install target                                                                                                                                 |
+| ---------------------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| OpenCode               | router plugin, routing support, bootstrap/install/update tooling                              | installs managed skills plus `core/router-core.js` and `plugins/agent-skills-router.mjs`                                                                           |
+| GitHub Copilot         | VS Code Agent Plugin, native skills, lifecycle hooks, generated skills, reusable instructions | `.claude-plugin/plugin.json`, `skills/`, `hooks/hooks.json`, `.github/skills/`, `.github/copilot-instructions.md`, `~/.agents/skills/`, `~/.copilot/instructions/` |
+| Claude Code            | generated skills, reusable rules, bootstrap/install/update tooling                            | `.claude/skills/`, `CLAUDE.md`, `~/.claude/skills/`, `~/.claude/rules/`                                                                                            |
+| DeepSeek Harness (dsh) | generated skills, routing guidance, optional router agent preset, preview API exposure docs   | `.dsh/skills/`, `~/.dsh/skills/`, `~/.dsh/AGENTS.md`, `~/.dsh/.agent-presets/ask-kit/`                                                                             |
 
-OpenCode remains the reference implementation for routing behavior. GitHub Copilot and Claude Code exports are generated from the same canonical workflow source.
+OpenCode remains the reference implementation for routing behavior. GitHub Copilot, Claude Code, and dsh exports and adapters are generated or maintained from the same canonical workflow source.
 
 ---
 
@@ -414,6 +477,7 @@ bash ./scripts/tag-release.sh --dry-run
 ```
 
 **Windows — PowerShell:**
+
 ```powershell
 pwsh -NoLogo -NoProfile -File .\scripts\tag-release.ps1 -DryRun
 ```
@@ -436,6 +500,7 @@ Bootstrap-managed installs update when you rerun `bootstrap.sh` or `bootstrap.ps
 Local clone install or update:
 
 **Linux / macOS — Bash:**
+
 ```bash
 bash ./scripts/install.sh
 
@@ -444,6 +509,7 @@ bash ./scripts/update.sh --skip-pull
 ```
 
 **Windows — PowerShell:**
+
 ```powershell
 pwsh -NoLogo -NoProfile -File .\scripts\install.ps1
 
@@ -453,7 +519,7 @@ pwsh -NoLogo -NoProfile -File .\scripts\update.ps1 -SkipPull
 
 The unified installer writes one local metadata file after each run:
 
-- Shared managed root: `~/.agents/.agent-skills-kit-install.txt`
+* Shared managed root: `~/.agents/.agent-skills-kit-install.txt`
 
 </details>
 
@@ -461,11 +527,11 @@ The unified installer writes one local metadata file after each run:
 
 ## Releases
 
-- `VERSION` is the canonical repo version.
-- `CHANGELOG.md` keeps `Unreleased` plus released version entries.
-- Stable bootstrap and update scripts resolve the latest `vX.Y.Z` tag before install.
-- Until the first stable tag exists, bootstrap and update scripts fall back to the current checkout and print that fallback.
-- User-visible fixes to shipped assets should bump at least the patch version before handoff; bootstrap and update users do not receive the fix until the matching `vX.Y.Z` tag exists.
+* `VERSION` is the canonical repo version.
+* `CHANGELOG.md` keeps `Unreleased` plus released version entries.
+* Stable bootstrap and update scripts resolve the latest `vX.Y.Z` tag before install.
+* Until the first stable tag exists, bootstrap and update scripts fall back to the current checkout and print that fallback.
+* User-visible fixes to shipped assets should bump at least the patch version before handoff; bootstrap and update users do not receive the fix until the matching `vX.Y.Z` tag exists.
 
 Suggested release flow:
 
@@ -506,17 +572,17 @@ scripts/check-release-readiness.js
 
 ## Notes
 
-- OpenCode is the routing reference implementation.
-- Visual assets live in `assets/social-preview.png`.
-- For GitHub repo cards, use `assets/social-preview.png` as the social preview image.
-- Restart OpenCode after install or update.
-- Bootstrap scripts store a managed checkout in `REPO_DIR` when set. Default path is `XDG_DATA_HOME/agent-skills-kit` when available, otherwise `LOCALAPPDATA\agent-skills-kit` on PowerShell, then `~/.local/share/agent-skills-kit`.
-- Stable updates use the newest SemVer tag available in the managed checkout.
-- `ui-ux` includes Python scripts and CSV data for design guidance and requires Python `3.8+`.
-- Installers overwrite only `agent-skills-kit` managed assets and preserve unrelated user customizations.
-- Installers also remove stale managed skills during reinstall or update, including skills retired from the pack.
-- The unified installer writes `.agent-skills-kit-install.txt` metadata in the shared `~/.agents/` root.
-- Generated platform artifacts are derived output. Edit `skills/*/SKILL.md`, then re-export.
+* OpenCode is the routing reference implementation.
+* Visual assets live in `assets/social-preview.png`.
+* For GitHub repo cards, use `assets/social-preview.png` as the social preview image.
+* Restart OpenCode after install or update.
+* Bootstrap scripts store a managed checkout in `REPO_DIR` when set. Default path is `XDG_DATA_HOME/agent-skills-kit` when available, otherwise `LOCALAPPDATA\agent-skills-kit` on PowerShell, then `~/.local/share/agent-skills-kit`.
+* Stable updates use the newest SemVer tag available in the managed checkout.
+* `ui-ux` includes Python scripts and CSV data for design guidance and requires Python `3.8+`.
+* Installers overwrite only `agent-skills-kit` managed assets and preserve unrelated user customizations.
+* Installers also remove stale managed skills during reinstall or update, including skills retired from the pack.
+* The unified installer writes `.agent-skills-kit-install.txt` metadata in the shared `~/.agents/` root.
+* Generated platform artifacts are derived output. Edit `skills/*/SKILL.md`, then re-export.
 
 ---
 
