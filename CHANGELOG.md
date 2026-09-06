@@ -6,6 +6,13 @@ Format follows Keep a Changelog. Stable releases use SemVer tags in `vX.Y.Z` for
 
 ## Unreleased
 
+## [1.8.2] - 2026-09-06
+
+### Fixed
+
+- **Interaction-based skill guard.** The router now nudges after five agent interactions without a loaded skill, including sessions with no tool calls, and resets the counter after a successful skill load.
+- **Routing state visibility.** OpenCode and dsh now retain matched skill and interaction state consistently for session guidance and panel output.
+
 ## [1.6.4] - Unreleased
 
 ### Fixed

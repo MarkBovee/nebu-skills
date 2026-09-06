@@ -9,7 +9,7 @@ function emptyState() {
   return {
     matchedSkills: [], lastMatch: '', matchedAt: 0,
     needsCodeReview: false, needsDesignReview: false, shouldCaptureImprovement: false,
-    skillsLoadedCount: 0, loadedSkills: [], toolCallsSinceSkillLoad: 0,
+    skillsLoadedCount: 0, loadedSkills: [], interactionCountSinceSkillLoad: 0,
   }
 }
 
@@ -64,7 +64,7 @@ return {
         if (exec?.name !== 'skill' || !result || result.isError) return
         const st = stateFor(exec.agent && exec.agent.id)
         st.skillsLoadedCount += 1
-        st.toolCallsSinceSkillLoad = 0
+        st.interactionCountSinceSkillLoad = 0
         const loaded = skillNameOf(exec.arguments)
         if (loaded && !st.loadedSkills.includes(loaded)) st.loadedSkills.push(loaded)
         st.lastMatch = loaded || st.lastMatch
@@ -86,7 +86,7 @@ return {
         needsCodeReview: st.needsCodeReview,
         needsDesignReview: st.needsDesignReview,
         shouldCaptureImprovement: st.shouldCaptureImprovement,
-        toolCallsSinceSkillLoad: st.toolCallsSinceSkillLoad,
+        interactionCountSinceSkillLoad: st.interactionCountSinceSkillLoad,
         skillsLoadedCount: st.skillsLoadedCount,
         keyed: Boolean(wanted && states.get(wanted)),
       }

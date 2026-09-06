@@ -190,7 +190,7 @@ async function main() {
     const coreDebtOverview = routerCore.buildSkillOverview({
       matchedSkills: [], needsCodeReview: true, needsDesignReview: false,
       shouldCaptureImprovement: false, executionProfile: null, toolCallCount: 0,
-      toolCallsSinceSkillLoad: 0, recentToolIds: [], recentEditedPaths: [],
+      interactionCountSinceSkillLoad: 0, recentToolIds: [], recentEditedPaths: [],
       hasDoneSessionAudit: true, skillsLoadedCount: 1,
     })
     for (const line of coreDebtOverview.split("\n").filter((l) => l.startsWith("→"))) {

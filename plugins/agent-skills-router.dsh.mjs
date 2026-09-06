@@ -45,6 +45,7 @@ const {
   SKILL_CODE_REVIEW, SKILL_VERIFICATION, SKILL_WRITE_SKILL, SKILL_SESSION_REVIEW,
   SKILL_UI_UX, SKILL_DESIGN_REVIEW,
   routingHintLines, cascadeRoute, hasPhraseSignal, COMPLETION_PHRASES,
+  INTERACTION_GUARD_THRESHOLD,
 } = routerCore
 
 const CODE_EDIT_TOOL_IDS = new Set(["edit", "write", "apply_patch"])
@@ -115,6 +116,7 @@ function panelViewOf(st) {
     needsDesignReview: st.needsDesignReview === true,
     shouldCaptureImprovement: st.shouldCaptureImprovement === true,
     skillsLoadedCount: st.skillsLoadedCount,
+    interactionCountSinceSkillLoad: st.interactionCountSinceSkillLoad,
   }
 }
 
@@ -131,6 +133,9 @@ function normalizePanelView(data) {
     needsDesignReview: data.needsDesignReview === true,
     shouldCaptureImprovement: data.shouldCaptureImprovement === true,
     skillsLoadedCount: Number.isFinite(data.skillsLoadedCount) ? data.skillsLoadedCount : 0,
+    interactionCountSinceSkillLoad: Number.isFinite(data.interactionCountSinceSkillLoad)
+      ? data.interactionCountSinceSkillLoad
+      : 0,
   }
 }
 
@@ -148,6 +153,7 @@ function emptyState() {
   return {
     lastMatch: "", matchedAt: 0, needsCodeReview: false, needsDesignReview: false,
     shouldCaptureImprovement: false, skillsLoadedCount: 0, loadedSkills: [],
+    interactionCountSinceSkillLoad: 0,
     steeredSkills: [],
   }
 }
@@ -229,6 +235,9 @@ export function apply(ctx, config) {
     lines.push("")
     lines.push(...routingHintLines())
     if (st.lastMatch) { lines.push(""); lines.push(`Active: ${st.lastMatch}`) }
+    if (st.interactionCountSinceSkillLoad >= INTERACTION_GUARD_THRESHOLD && st.skillsLoadedCount === 0) {
+      lines.push("→ Working through 5 actions without a loaded skill — `skill(name: 'develop')` sets workflow guardrails")
+    }
     if (st.needsCodeReview) lines.push("→ Code edited — `skill(name: 'code-review')` before claiming done")
     if (st.needsDesignReview) lines.push("→ Design produced — `skill(name: 'design-review')` filters AI defaults before showing")
     if (st.shouldCaptureImprovement) lines.push("→ Improvement found? `skill(name: 'session-review')` to file issue")
@@ -266,6 +275,7 @@ export function apply(ctx, config) {
       if (!st.loadedSkills.includes(loaded)) st.loadedSkills.push(loaded)
       if (st.loadedSkills.length > LOADED_SKILLS_MAX) st.loadedSkills.shift()
       st.lastMatch = loaded
+      st.interactionCountSinceSkillLoad = 0
     }
     if (loaded === SKILL_CODE_REVIEW) {
       st.needsCodeReview = false; st.shouldCaptureImprovement = true
@@ -297,6 +307,7 @@ export function apply(ctx, config) {
       const text = messageText(payload?.message)
       if (!text.trim()) return
       const st = stateFor(payload?.agent?.id)
+      st.interactionCountSinceSkillLoad += 1
       st.lastMatch = cascadeRoute(text, SKILL_STUBS, st)?.matchedSkills?.[0]?.name || "develop"
       st.matchedAt = Date.now()
       if (hasPhraseSignal(text, COMPLETION_PHRASES)) {

@@ -64,7 +64,7 @@ export const AgentSkillsRouter = async () => {
       try {
         const promptText = (input?.prompt || input?.text || "").trim()
         if (!promptText) return
-        const state = getSessionState(sessionState, SESSION_KEY)
+        let state = getSessionState(sessionState, SESSION_KEY)
         const skills = await getSkills()
         const extraLines = []
 
@@ -74,6 +74,12 @@ export const AgentSkillsRouter = async () => {
         if (matchSkill && matchSkill.name !== SKILL_DEVELOP && !loadedSkills.includes(matchSkill.name)) {
           extraLines.push(`→ Match: ${matchSkill.name} — call \`skill(name: '${matchSkill.name}')\` now`)
         }
+
+        state = setSessionState(sessionState, SESSION_KEY, {
+          matchedSkills: route?.matchedSkills || [],
+          executionProfile: route?.executionProfile || null,
+          interactionCountSinceSkillLoad: (state.interactionCountSinceSkillLoad || 0) + 1,
+        })
 
         const providerID = state.providerID || ""
         if (providerID && isInPeakWindow(new Date(), providerID) && !state.peakWarningShown) {
@@ -124,10 +130,17 @@ export const AgentSkillsRouter = async () => {
       const state = getSessionState(sessionState, SESSION_KEY)
       const recentToolIds = [...(state.recentToolIds || []), toolID].slice(-RECENT_TOOL_MAX)
       const toolCallCount = (state.toolCallCount || 0) + 1
-      const toolsSinceLoad = toolID === "skill" ? 0 : (state.toolCallsSinceSkillLoad || 0) + 1
       const skillsLoadedCount = toolID === "skill" ? (state.skillsLoadedCount || 0) + 1 : (state.skillsLoadedCount || 0)
       const loadedSkills = toolID === "skill" ? unique([...(state.loadedSkills || []), resolveSkillName(input, output)]) : (state.loadedSkills || [])
-      const base = { recentToolIds, toolCallCount, toolCallsSinceSkillLoad: toolsSinceLoad, skillsLoadedCount, loadedSkills }
+      const base = {
+        recentToolIds,
+        toolCallCount,
+        skillsLoadedCount,
+        loadedSkills,
+        interactionCountSinceSkillLoad: toolID === "skill"
+          ? 0
+          : (state.interactionCountSinceSkillLoad || 0),
+      }
 
       if (CODE_EDIT_TOOL_IDS.has(toolID)) { setSessionState(sessionState, SESSION_KEY, { ...base, needsCodeReview: true }); return }
       if (toolID !== "skill") { setSessionState(sessionState, SESSION_KEY, base); return }

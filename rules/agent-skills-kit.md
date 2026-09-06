@@ -25,7 +25,7 @@ Normal software work (default)           → develop
 |-------|---------|
 | `→ Code edited — skill(name: 'code-review')` | A code edit tool ran. Load code-review before claiming done. |
 | `→ Design produced — skill(name: 'design-review')` | The `ui-ux` skill was loaded. Filter the UI for AI-default slop before showing it. |
-| `→ Working without loaded skill` | 8+ tool calls without loading any skill. Load one now. |
+| `→ Working without loaded skill` | 5+ interactions without loading any skill. Load one now. |
 | `→ Improvement found? skill(name: 'session-review')` | Session uncovered a reusable workflow gap worth filing. |
 
 ## Handoff to subagents

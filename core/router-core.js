@@ -3,6 +3,7 @@ const path = require("node:path")
 
 const DEFAULT_MAX_HINTS = 4
 const DEFAULT_MAX_LISTED_SKILLS = 8
+const INTERACTION_GUARD_THRESHOLD = 5
 const MAX_SESSION_CACHE = 100
 const CODE_EDIT_TOOL_IDS = new Set(["edit", "write", "apply_patch"])
 
@@ -124,7 +125,7 @@ function createEmptySessionState() {
     matchedSkills: [], needsCodeReview: false, shouldCaptureImprovement: false,
     needsDesignReview: false,
     executionProfile: null,
-    toolCallCount: 0, toolCallsSinceSkillLoad: 0,
+    toolCallCount: 0, interactionCountSinceSkillLoad: 0,
     recentToolIds: [], recentEditedPaths: [],
     hasDoneSessionAudit: false, skillsLoadedCount: 0,
   }
@@ -291,7 +292,7 @@ function routingHintLines() {
 }
 
 function buildSkillOverview(sessionState) {
-  const toolsSinceLoad = sessionState.toolCallsSinceSkillLoad || 0
+  const interactionsSinceLoad = sessionState.interactionCountSinceSkillLoad || 0
   const skillsLoaded = (sessionState.skillsLoadedCount || 0) > 0
   const lines = [
     "╌ Agent Skills Kit ╌",
@@ -314,11 +315,8 @@ function buildSkillOverview(sessionState) {
   if (sessionState.needsDesignReview) {
     lines.push("→ Design produced — `skill(name: 'design-review')` filters AI defaults before showing")
   }
-  if (toolsSinceLoad > 8 && (sessionState.skillsLoadedCount || 0) === 0) {
-    const isCodeEditing = (sessionState.recentToolIds || []).some(t => CODE_WORK_TOOL_IDS.has(t))
-    if (isCodeEditing) {
-      lines.push("→ Working without loaded skill — `skill(name: 'develop')` sets workflow guardrails")
-    }
+  if (interactionsSinceLoad >= INTERACTION_GUARD_THRESHOLD && (sessionState.skillsLoadedCount || 0) === 0) {
+    lines.push("→ Working through 5 actions without a loaded skill — `skill(name: 'develop')` sets workflow guardrails")
   }
   if (sessionState.shouldCaptureImprovement) {
     lines.push("→ Improvement found? `skill(name: 'session-review')` to file issue")
@@ -420,7 +418,8 @@ function describePeakWindow(providerID) {
 }
 
 module.exports = {
-  CODE_EDIT_TOOL_IDS, CODE_WORK_TOOL_IDS, DEFAULT_MAX_HINTS, DEFAULT_MAX_LISTED_SKILLS, RECENT_TOOL_MAX,
+  CODE_EDIT_TOOL_IDS, CODE_WORK_TOOL_IDS, DEFAULT_MAX_HINTS, DEFAULT_MAX_LISTED_SKILLS,
+  INTERACTION_GUARD_THRESHOLD, RECENT_TOOL_MAX,
   VALID_DELEGATION_MODES, VALID_EXECUTION_TIERS,
   SKILL_AGENT_WORKFLOWS, SKILL_CODE_REVIEW, SKILL_DEBUGGING,
   SKILL_SESSION_REVIEW, SKILL_IMPROVE, SKILL_DEVELOP, SKILL_INTAKE, SKILL_UI_UX,

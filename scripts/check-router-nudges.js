@@ -54,6 +54,28 @@ async function main() {
     (matchAppend?.append || "").includes("Match: debugging"),
   )
 
+  // Interaction guard: prompts count even when no tools run between them.
+  for (let interaction = 0; interaction < 2; interaction += 1) {
+    const append = await plugin["tui.prompt.append"]({ prompt: `routine interaction ${interaction}` })
+    check(
+      `interaction guard stays quiet before five actions (${interaction + 3})`,
+      !(append?.append || "").includes("Working through 5 actions"),
+    )
+  }
+  const guardAppend = await plugin["tui.prompt.append"]({ prompt: "fifth routine interaction" })
+  check(
+    "interaction guard uses five actions without tools",
+    (guardAppend?.append || "").includes("Working through 5 actions"),
+  )
+
+  // A successful skill load resets the interaction guard.
+  await plugin["tool.execute.after"]({ tool: "skill" }, { args: { name: "develop" } })
+  const afterSkillLoad = await plugin["tui.prompt.append"]({ prompt: "reset check" })
+  check(
+    "skill load resets interaction guard",
+    !(afterSkillLoad?.append || "").includes("Working through 5 actions"),
+  )
+
   // Code-edit tracking: an edit tool sets the code-review nudge.
   await plugin["tool.execute.after"]({ tool: "edit" }, {})
   const afterEdit = await plugin["tui.prompt.append"]({ prompt: "volgende stap" })
